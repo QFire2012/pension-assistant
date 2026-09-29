@@ -63,7 +63,7 @@ export function DetailedChart({ data, dataMonthly, targetCapital }: Props) {
               }}
               labelStyle={{ color: '#e2e8f0', fontWeight: 600 }}
               itemStyle={{ color: '#e2e8f0' }}
-              formatter={(v: number) => Math.round(v).toLocaleString('ru-RU') + ' ₽'}
+              formatter={(v: any) => Math.round(v).toLocaleString('ru-RU') + ' ₽'}
               labelFormatter={(label, payload) => {
                 if (isMonth) {
                   const p = payload?.[0]?.payload;

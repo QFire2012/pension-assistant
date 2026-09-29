@@ -73,7 +73,7 @@ export function HistorySection() {
             <XAxis dataKey="year" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" tickFormatter={(v) => `${v}%`} />
             <Tooltip
-              formatter={(v: number) => `${v}%`}
+              formatter={(v: any) => `${v}%`}
               labelFormatter={(v) => `Год: ${v}`}
             />
             <Legend />

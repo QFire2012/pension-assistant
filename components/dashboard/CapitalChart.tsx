@@ -18,7 +18,7 @@ export function CapitalChart({
           <XAxis dataKey="age" stroke="#94a3b8" tickFormatter={(v) => `${v} лет`} />
           <YAxis stroke="#94a3b8" tickFormatter={fmt} />
           <Tooltip
-            formatter={(v: number) => `${Math.round(v).toLocaleString('ru-RU')} ₽`}
+            formatter={(v: any) => `${Math.round(v).toLocaleString('ru-RU')} ₽`}
             labelFormatter={(v) => `Возраст: ${v}`}
           />
           <Legend />

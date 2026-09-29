@@ -135,7 +135,7 @@ export function PostRetirementChart({
               }}
               labelStyle={{ color: '#e2e8f0', fontWeight: 600 }}
               itemStyle={{ color: '#e2e8f0' }}
-              formatter={(v: number) => fmtFull(v)}
+              formatter={(v: any) => fmtFull(v)}
               labelFormatter={(v) => `Возраст: ${v}`}
             />
             <Legend wrapperStyle={{ color: '#e2e8f0' }} />
