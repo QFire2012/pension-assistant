@@ -66,14 +66,15 @@ export async function generateForecast(userId: string) {
     (targetCapitalToday - fvStart) / (annuityFactor || 1)
   );
 
+  // ── Прогноз с рекомендованными взносами ──
+  // ВСЁ считаем в СЕГОДНЯШНИХ деньгах, номинал — только для вывода
   let projectedToday = startCapital;
   for (let m = 0; m < monthsToRetirement; m++) {
-    projectedToday = projectedToday * (1 + monthlyReturn) + avgMonthly;
+    projectedToday = projectedToday * (1 + monthlyReturn) + requiredMonthlyToday;
   }
 
   const deficitToday = Math.max(0, targetCapitalToday - projectedToday);
 
-  // Базовая дата — сегодня, первый день месяца
   const today = new Date();
   const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -105,9 +106,8 @@ export async function generateForecast(userId: string) {
       avgSalary: Math.round(avgSalaryStart * inflationMult),
     });
     for (let m = 0; m < 12; m++) {
-      const contribution = requiredMonthlyToday * inflationMult;
-      capitalToday = capitalToday * (1 + monthlyReturn) + contribution;
-      investedToday += contribution;
+      capitalToday = capitalToday * (1 + monthlyReturn) + requiredMonthlyToday;
+      investedToday += requiredMonthlyToday;
     }
   }
 
@@ -137,15 +137,14 @@ export async function generateForecast(userId: string) {
       avgSalary: Math.round(avgSalaryStart * inflationMult),
     });
     if (m < monthsToRetirement) {
-      const contribution = requiredMonthlyToday * inflationMult;
-      capitalToday = capitalToday * (1 + monthlyReturn) + contribution;
-      investedToday += contribution;
+      capitalToday = capitalToday * (1 + monthlyReturn) + requiredMonthlyToday;
+      investedToday += requiredMonthlyToday;
     }
   }
 
   const finalProjection = projectionChart[projectionChart.length - 1];
 
-  // ── Реальные взносы ──
+  // ── Реальные взносы (avgMonthly) ──
   const chartData: any[] = [];
   const chartDataMonthly: any[] = [];
   let totalCap = startCapital;
