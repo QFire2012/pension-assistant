@@ -9,11 +9,11 @@ export function HelpTip({ text }: { text: string }) {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-600 text-[10px] font-bold text-slate-400 hover:border-slate-400 hover:text-slate-200">
+      <span className="flex h-4 w-4 items-center justify-center rounded-full border border-[#b9ad99] text-[10px] font-bold text-[#6f766f] hover:border-[#1d5f4a] hover:text-[#1d5f4a]">
         ?
       </span>
       {open && (
-        <span className="absolute left-1/2 top-full z-50 mt-1 w-64 -translate-x-1/2 rounded-lg border border-slate-600 bg-slate-800 p-3 text-xs font-normal leading-relaxed text-slate-200 shadow-xl">
+        <span className="absolute left-1/2 top-full z-50 mt-1 w-64 -translate-x-1/2 rounded-md border border-[#cbbda7] bg-[#fffaf1] p-3 text-xs font-normal leading-relaxed text-[#25302a] shadow-xl">
           {text}
         </span>
       )}

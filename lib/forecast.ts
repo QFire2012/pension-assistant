@@ -1,10 +1,26 @@
 import { createClient } from '@/lib/supabase/server';
-import { splitOf, STOCKS_RETURN_20Y, BONDS_RETURN_20Y, AVG_INFLATION_20Y } from '@/lib/portfolio-data';
+import { splitOf, STOCKS_RETURN_20Y, BONDS_RETURN_20Y } from '@/lib/portfolio-data';
+import type { ChartDatum } from '@/lib/types';
 
 const SWR = 0.04;
 
 const SHORT_MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 const FULL_MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+type Profile = {
+  current_age: number;
+  retirement_age: number;
+  initial_capital: number;
+  desired_monthly_income: number;
+  real_return_rate: number;
+  inflation_rate: number;
+  portfolio_structure: string;
+};
+
+type Contribution = {
+  amount_cents: number;
+  contributed_at: string;
+};
 
 function makeMonthLabels(startDate: Date, monthOffset: number) {
   const d = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset, 1);
@@ -16,31 +32,37 @@ function makeMonthLabels(startDate: Date, monthOffset: number) {
 export async function generateForecast(userId: string) {
   const supabase = await createClient();
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles').select('*').eq('id', userId).single();
+  const profile = profileData as Profile | null;
   if (!profile) throw new Error('Profile not found');
 
-  const { data: contributions } = await supabase
+  const { data: contributionData } = await supabase
     .from('contributions')
     .select('amount_cents, contributed_at')
     .eq('user_id', userId)
     .order('contributed_at', { ascending: true });
+  const contributions = (contributionData || []) as Contribution[];
 
   const initialCapital = Number(profile.initial_capital || 0);
   const totalContributed =
     (contributions || []).reduce((s, c) => s + Number(c.amount_cents), 0) / 100;
 
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const today = new Date();
+  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  const sixMonthsAgo = new Date(startDate);
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
   const recent = (contributions || []).filter(
     (c) => new Date(c.contributed_at) >= sixMonthsAgo
   );
+  const recentTotal =
+    recent.reduce((s, c) => s + Number(c.amount_cents), 0) / 100;
   const avgMonthly =
     recent.length > 0
-      ? recent.reduce((s, c) => s + Number(c.amount_cents), 0) / recent.length / 100
+      ? recentTotal / 6
       : 0;
 
-  const yearsToRetirement = profile.retirement_age - profile.current_age;
+  const yearsToRetirement = Math.max(0, profile.retirement_age - profile.current_age);
   const monthsToRetirement = yearsToRetirement * 12;
   const realAnnual = Number(profile.real_return_rate);
   const monthlyReturn = Math.pow(1 + realAnnual, 1 / 12) - 1;
@@ -61,10 +83,9 @@ export async function generateForecast(userId: string) {
       ? monthsToRetirement
       : (Math.pow(1 + monthlyReturn, monthsToRetirement) - 1) / monthlyReturn;
 
-  const requiredMonthlyToday = Math.max(
-    0,
-    (targetCapitalToday - fvStart) / (annuityFactor || 1)
-  );
+  const requiredMonthlyToday = monthsToRetirement > 0
+    ? Math.max(0, (targetCapitalToday - fvStart) / (annuityFactor || 1))
+    : 0;
 
   // ── Прогноз с рекомендованными взносами ──
   // ВСЁ считаем в СЕГОДНЯШНИХ деньгах, номинал — только для вывода
@@ -75,12 +96,9 @@ export async function generateForecast(userId: string) {
 
   const deficitToday = Math.max(0, targetCapitalToday - projectedToday);
 
-  const today = new Date();
-  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-
   // ── Прогнозный график ──
-  const projectionChart: any[] = [];
-  const projectionChartMonthly: any[] = [];
+  const projectionChart: ChartDatum[] = [];
+  const projectionChartMonthly: ChartDatum[] = [];
   let capitalToday = startCapital;
   let investedToday = startCapital;
   const avgSalaryStart = 60000;
@@ -145,8 +163,8 @@ export async function generateForecast(userId: string) {
   const finalProjection = projectionChart[projectionChart.length - 1];
 
   // ── Реальные взносы (avgMonthly) ──
-  const chartData: any[] = [];
-  const chartDataMonthly: any[] = [];
+  const chartData: ChartDatum[] = [];
+  const chartDataMonthly: ChartDatum[] = [];
   let totalCap = startCapital;
   let invested = startCapital;
   let stocksCap = startCapital * (stocksPct / 100);
@@ -221,52 +239,70 @@ export async function generateForecast(userId: string) {
     }
   }
 
-  // ── Пост-пенсионная симуляция ──
-  const postRetireYearsSimulate = 30;
-  const postRetirement: any[] = [];
-  let capPost = projectedToday;
-  let cumulativeWithdrawn = 0;
-  let cumulativeGrowth = 0;
-  const monthlyWithdrawal = gap;
-  let capitalRunOutAge: number | null = null;
-  const monthlyWithdrawalInflation = 1 + inflationRate / 12;
+  const currentProjectionFinal = chartDataMonthly[chartDataMonthly.length - 1];
+  const currentProjectedToday = Number(currentProjectionFinal?.capital ?? startCapital);
+  const currentDeficitToday = Math.max(0, targetCapitalToday - currentProjectedToday);
 
-  for (let y = 0; y <= postRetireYearsSimulate; y++) {
-    postRetirement.push({
-      age: profile.retirement_age + y,
-      capital: Math.round(capPost),
-      cumulativeWithdrawn: Math.round(cumulativeWithdrawn),
-      cumulativeGrowth: Math.round(cumulativeGrowth),
-      yearGrowth: 0,
-      yearWithdrawal: 0,
-    });
-    const idx = postRetirement.length - 1;
-    let yearGrowth = 0;
-    let yearWithdrawal = 0;
-    for (let m = 0; m < 12; m++) {
-      const growth = capPost * monthlyReturn;
-      const withdrawal = monthlyWithdrawal * Math.pow(monthlyWithdrawalInflation, y);
-      yearGrowth += growth;
-      yearWithdrawal += withdrawal;
-      capPost = capPost + growth - withdrawal;
-      cumulativeGrowth += growth;
-      cumulativeWithdrawn += withdrawal;
-      if (capPost <= 0) {
-        capPost = 0;
-        if (capitalRunOutAge === null) capitalRunOutAge = profile.retirement_age + y;
+  // ── Пост-пенсионная симуляция ──
+  // Капитал и снятия считаются в сегодняшних рублях. Инфляция уже вынесена в отдельные номинальные поля.
+  const postRetireYearsSimulate = 30;
+  const desiredYearly = gap * 12;
+  const swrPct = SWR * 100;
+  const neededCapitalForDesired = gap > 0 ? (gap * 12) / SWR : 0;
+  const retirementAge = profile.retirement_age;
+
+  function simulatePostRetirement(startCapitalToday: number) {
+    const postRetirement: ChartDatum[] = [];
+    let capPost = Math.max(0, startCapitalToday);
+    let cumulativeWithdrawn = 0;
+    let cumulativeGrowth = 0;
+    let capitalRunOutAge: number | null = null;
+
+    for (let y = 0; y <= postRetireYearsSimulate; y++) {
+      postRetirement.push({
+        age: retirementAge + y,
+        capital: Math.round(capPost),
+        cumulativeWithdrawn: Math.round(cumulativeWithdrawn),
+        cumulativeGrowth: Math.round(cumulativeGrowth),
+        yearGrowth: 0,
+        yearWithdrawal: 0,
+      });
+      const idx = postRetirement.length - 1;
+      let yearGrowth = 0;
+      let yearWithdrawal = 0;
+      for (let m = 0; m < 12; m++) {
+        const growth = capPost * monthlyReturn;
+        const withdrawal = Math.min(gap, capPost + growth);
+        yearGrowth += growth;
+        yearWithdrawal += withdrawal;
+        capPost = Math.max(0, capPost + growth - withdrawal);
+        cumulativeGrowth += growth;
+        cumulativeWithdrawn += withdrawal;
+        if (capPost <= 0 && capitalRunOutAge === null) {
+          capitalRunOutAge = retirementAge + y;
+        }
       }
+      postRetirement[idx].yearGrowth = Math.round(yearGrowth);
+      postRetirement[idx].yearWithdrawal = Math.round(yearWithdrawal);
     }
-    postRetirement[idx].yearGrowth = Math.round(yearGrowth);
-    postRetirement[idx].yearWithdrawal = Math.round(yearWithdrawal);
+
+    const safeMonthlyWithdrawal = (startCapitalToday * SWR) / 12;
+    const withdrawalRatePct = startCapitalToday > 0 ? (desiredYearly / startCapitalToday) * 100 : 0;
+    const isWithdrawalSafe = withdrawalRatePct <= swrPct;
+    const monthlyGap = Math.max(0, gap - safeMonthlyWithdrawal);
+
+    return {
+      postRetirement,
+      capitalRunOutAge,
+      safeMonthlyWithdrawal,
+      withdrawalRatePct,
+      isWithdrawalSafe,
+      monthlyGap,
+    };
   }
 
-  const safeMonthlyWithdrawal = (projectedToday * SWR) / 12;
-  const desiredYearly = gap * 12;
-  const withdrawalRatePct = projectedToday > 0 ? (desiredYearly / projectedToday) * 100 : 0;
-  const swrPct = SWR * 100;
-  const isWithdrawalSafe = withdrawalRatePct <= swrPct;
-  const monthlyGap = Math.max(0, gap - safeMonthlyWithdrawal);
-  const neededCapitalForDesired = gap > 0 ? (gap * 12) / SWR : 0;
+  const recommendedRetirement = simulatePostRetirement(projectedToday);
+  const currentRetirement = simulatePostRetirement(currentProjectedToday);
 
   await supabase.from('forecast_snapshots').insert({
     user_id: userId,
@@ -281,8 +317,10 @@ export async function generateForecast(userId: string) {
     startCapital: Math.round(startCapital),
     avgMonthlyContribution: Math.round(avgMonthly),
     projectedCapital: Math.round(projectedToday),
+    currentProjectedCapital: Math.round(currentProjectedToday),
     targetCapital: Math.round(targetCapitalToday),
     deficit: Math.round(deficitToday),
+    currentDeficit: Math.round(currentDeficitToday),
     requiredMonthly: Math.round(requiredMonthlyToday),
     yearsToRetirement,
     stocksPct,
@@ -306,13 +344,20 @@ export async function generateForecast(userId: string) {
     chartData,
     chartDataMonthly,
 
-    postRetirement,
-    capitalRunOutAge,
-    safeMonthlyWithdrawal: Math.round(safeMonthlyWithdrawal),
-    withdrawalRatePct: +withdrawalRatePct.toFixed(2),
+    postRetirement: recommendedRetirement.postRetirement,
+    capitalRunOutAge: recommendedRetirement.capitalRunOutAge,
+    safeMonthlyWithdrawal: Math.round(recommendedRetirement.safeMonthlyWithdrawal),
+    withdrawalRatePct: +recommendedRetirement.withdrawalRatePct.toFixed(2),
     swrPct: +swrPct.toFixed(2),
-    isWithdrawalSafe,
-    monthlyGap: Math.round(monthlyGap),
+    isWithdrawalSafe: recommendedRetirement.isWithdrawalSafe,
+    monthlyGap: Math.round(recommendedRetirement.monthlyGap),
     neededCapitalForDesired: Math.round(neededCapitalForDesired),
+
+    currentPostRetirement: currentRetirement.postRetirement,
+    currentCapitalRunOutAge: currentRetirement.capitalRunOutAge,
+    currentSafeMonthlyWithdrawal: Math.round(currentRetirement.safeMonthlyWithdrawal),
+    currentWithdrawalRatePct: +currentRetirement.withdrawalRatePct.toFixed(2),
+    currentIsWithdrawalSafe: currentRetirement.isWithdrawalSafe,
+    currentMonthlyGap: Math.round(currentRetirement.monthlyGap),
   };
 }

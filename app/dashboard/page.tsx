@@ -6,11 +6,11 @@ import { ProjectionChart } from '@/components/dashboard/ProjectionChart';
 import { InflationChart } from '@/components/dashboard/InflationChart';
 import { PostRetirementChart } from '@/components/dashboard/PostRetirementChart';
 import { formatMoney } from '@/lib/utils';
+import type { Forecast } from '@/lib/types';
 
 export default function DashboardHome() {
-  const [forecast, setForecast] = useState<any>(null);
+  const [forecast, setForecast] = useState<Forecast | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   const load = useCallback(async () => {
     const f = await fetch('/api/forecast').then((r) => r.json());
@@ -19,9 +19,10 @@ export default function DashboardHome() {
   }, []);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
     const handleRefresh = () => load();
     window.addEventListener('forecast-refresh', handleRefresh);
+    const supabase = createClient();
     const channel = supabase
       .channel('dashboard-home')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contributions' }, () => load())
@@ -31,17 +32,25 @@ export default function DashboardHome() {
       window.removeEventListener('forecast-refresh', handleRefresh);
       supabase.removeChannel(channel);
     };
-  }, [load, supabase]);
+  }, [load]);
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center text-[#6f766f]">Загрузка расчета...</div>;
   if (!forecast?.projectionChart)
-    return <div className="p-8 text-center text-red-400">Ошибка: {forecast?.error}</div>;
+    return <div className="p-8 text-center text-[#963f32]">Ошибка: {forecast?.error}</div>;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Прогноз</h1>
+      <header className="max-w-3xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756b5b]">
+          рекомендованный сценарий
+        </p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#1d2521]">Прогноз до пенсии</h1>
+        <p className="mt-2 text-sm leading-6 text-[#5f675f]">
+          Этот экран показывает, какой ежемесячный взнос нужен, чтобы выйти на желаемый доход в сегодняшних рублях.
+        </p>
+      </header>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Нужно вкладывать"
           value={formatMoney(forecast.requiredMonthly) + '/мес'}
@@ -59,10 +68,10 @@ export default function DashboardHome() {
         />
       </div>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
+      <section className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4 shadow-[0_14px_40px_rgba(65,52,36,0.07)] sm:p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Как достичь цели</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-lg font-semibold text-[#1d2521]">Как достичь цели</h2>
+          <p className="text-xs text-[#6f766f]">
             Сколько вкладывать, сколько принесут проценты и как инфляция влияет на сумму
           </p>
         </div>
@@ -75,12 +84,12 @@ export default function DashboardHome() {
           inflationPct={forecast.inflationPct}
           retirementAge={forecast.retirementAge}
         />
-      </div>
+      </section>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
+      <section className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4 shadow-[0_14px_40px_rgba(65,52,36,0.07)] sm:p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Первые 10 лет после выхода на пенсию</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-lg font-semibold text-[#1d2521]">Первые 10 лет после выхода на пенсию</h2>
+          <p className="text-xs text-[#6f766f]">
             Что будет с капиталом, если снимать рекомендованный доход
           </p>
         </div>
@@ -99,12 +108,12 @@ export default function DashboardHome() {
           neededCapitalForDesired={forecast.neededCapitalForDesired}
           realAnnualReturnPct={forecast.realAnnualReturnPct}
         />
-      </div>
+      </section>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-800 p-5">
+      <section className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4 shadow-[0_14px_40px_rgba(65,52,36,0.07)] sm:p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Влияние инфляции на доход</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-lg font-semibold text-[#1d2521]">Влияние инфляции на доход</h2>
+          <p className="text-xs text-[#6f766f]">
             Как меняется покупательная способность рубля к пенсии
           </p>
         </div>
@@ -114,7 +123,7 @@ export default function DashboardHome() {
           monthlyIncomeToday={forecast.desiredMonthlyIncome}
           inflationPct={forecast.inflationPct}
         />
-      </div>
+      </section>
     </div>
   );
 }

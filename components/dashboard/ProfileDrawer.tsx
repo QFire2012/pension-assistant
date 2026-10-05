@@ -12,6 +12,8 @@ const DEFAULT_FORM = {
   portfolio_structure: '60_40',
 };
 
+type ProfileForm = typeof DEFAULT_FORM;
+
 export function ProfileDrawer({
   open,
   onClose,
@@ -21,23 +23,24 @@ export function ProfileDrawer({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [form, setForm] = useState<any>(DEFAULT_FORM);
+  const [form, setForm] = useState<ProfileForm>(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    setError('');
-
-    fetch('/api/profile')
-      .then(async (r) => {
+    let alive = true;
+    const loadProfile = async () => {
+      await Promise.resolve();
+      if (!alive) return;
+      setLoading(true);
+      setError('');
+      try {
+        const r = await fetch('/api/profile');
         const data = await r.json();
         if (!r.ok) throw new Error(data?.error || `HTTP ${r.status}`);
-        return data;
-      })
-      .then((data) => {
+        if (!alive) return;
         setForm({
           current_age: data?.current_age ?? 30,
           retirement_age: data?.retirement_age ?? 60,
@@ -47,15 +50,22 @@ export function ProfileDrawer({
           inflation_rate: (Number(data?.inflation_rate ?? 0.05) * 100).toFixed(2),
           portfolio_structure: data?.portfolio_structure || '60_40',
         });
-      })
-      .catch((e) => {
-        setError('Не удалось загрузить: ' + e.message);
+      } catch (e) {
+        if (!alive) return;
+        const message = e instanceof Error ? e.message : 'неизвестная ошибка';
+        setError('Не удалось загрузить: ' + message);
         setForm(DEFAULT_FORM);
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+    void loadProfile();
+    return () => {
+      alive = false;
+    };
   }, [open]);
 
-  const update = (key: string, value: any) => setForm({ ...form, [key]: value });
+  const update = (key: keyof ProfileForm, value: string | number) => setForm({ ...form, [key]: value });
 
   const onPortfolioChange = (id: string) => {
     const opt = PORTFOLIO_OPTIONS.find((o) => o.id === id);
@@ -95,14 +105,15 @@ export function ProfileDrawer({
         setSaved(false);
         onClose();
       }, 600);
-    } catch (e: any) {
-      setError('Ошибка сети: ' + e.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'неизвестная ошибка';
+      setError('Ошибка сети: ' + message);
     }
   };
 
-  const field = (label: string, key: string, step = 1, hint?: string) => (
+  const field = (label: string, key: keyof ProfileForm, step = 1, hint?: string) => (
     <div>
-      <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
         {label}
       </label>
       <input
@@ -110,9 +121,9 @@ export function ProfileDrawer({
         step={step}
         value={form[key] ?? ''}
         onChange={(e) => update(key, e.target.value)}
-        className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm"
+        className="min-h-11 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
       />
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-[#7a817b]">{hint}</p>}
     </div>
   );
 
@@ -120,20 +131,25 @@ export function ProfileDrawer({
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/50 transition-opacity ${
+        className={`fixed inset-0 z-40 bg-[#1d2521]/35 transition-opacity ${
           open ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
       />
       <aside
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-slate-700 bg-slate-900 p-6 shadow-2xl transition-transform duration-300 ${
+        className={`fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-[#d7cbb8] bg-[#fffaf1] p-5 shadow-2xl transition-transform duration-300 sm:p-6 ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Настройки</h2>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#756b5b]">
+              параметры
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-[#1d2521]">Настройки расчета</h2>
+          </div>
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+            className="min-h-10 rounded-md border border-[#cbbda7] px-3 text-sm font-medium text-[#5f675f] hover:bg-[#efe6d8]"
           >
             Закрыть
           </button>
@@ -141,24 +157,24 @@ export function ProfileDrawer({
 
         {loading ? (
           <div className="space-y-4">
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-xs text-amber-400">
+            <div className="rounded-md border border-[#d7cbb8] bg-[#f7ecd9] p-3 text-xs text-[#765b28]">
               Пробуждаем базу данных... обычно 5–20 секунд.
             </div>
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="space-y-2">
-                <div className="h-3 w-24 animate-pulse rounded bg-slate-700" />
-                <div className="h-10 w-full animate-pulse rounded-lg bg-slate-800" />
+                <div className="h-3 w-24 animate-pulse rounded bg-[#ddd2bf]" />
+                <div className="h-10 w-full animate-pulse rounded-md bg-[#efe6d8]" />
               </div>
             ))}
           </div>
         ) : (
           <form onSubmit={save} className="space-y-4">
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3 text-xs text-slate-400">
-              Все расчёты в <b>сегодняшних деньгах</b>. Доходность — <b>реальная</b>.
+            <div className="rounded-md border border-[#d7cbb8] bg-[#f3eadc] p-3 text-xs leading-relaxed text-[#5f675f]">
+              Все расчеты в <b className="text-[#1d2521]">сегодняшних деньгах</b>. Доходность — <b className="text-[#1d2521]">реальная</b>.
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-xs text-red-300">
+              <div className="rounded-md border border-[#d8a39a] bg-[#fff1ed] p-3 text-xs text-[#963f32]">
                 {error}
               </div>
             )}
@@ -169,13 +185,13 @@ export function ProfileDrawer({
             {field('Желаемый доход, ₽/мес', 'desired_monthly_income', 1000, 'В сегодняшних деньгах')}
 
             <div>
-              <label className="mb-1 block text-xs uppercase tracking-wide text-slate-400">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
                 Структура портфеля
               </label>
               <select
                 value={form.portfolio_structure}
                 onChange={(e) => onPortfolioChange(e.target.value)}
-                className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm"
+                className="min-h-11 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
               >
                 {PORTFOLIO_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>
@@ -195,7 +211,7 @@ export function ProfileDrawer({
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-green-500 py-2 font-semibold text-slate-900 hover:bg-green-400"
+              className="min-h-12 w-full rounded-md bg-[#1d5f4a] font-semibold text-white transition hover:bg-[#174d3d]"
             >
               {saved ? '✓ Сохранено' : 'Сохранить'}
             </button>

@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, Legend, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { HelpTip } from '@/components/HelpTip';
+import type { ChartDatum } from '@/lib/types';
 
 interface Props {
   currentAge: number;
@@ -14,7 +15,7 @@ interface Props {
 
 export function InflationChart({ currentAge, retirementAge, monthlyIncomeToday, inflationPct }: Props) {
   const years = retirementAge - currentAge;
-  const data: any[] = [];
+  const data: ChartDatum[] = [];
 
   for (let y = 0; y <= years; y++) {
     const mult = Math.pow(1 + inflationPct / 100, y);
@@ -28,7 +29,7 @@ export function InflationChart({ currentAge, retirementAge, monthlyIncomeToday, 
   }
 
   const last = data[data.length - 1];
-  const retirementNominal = last?.nominal || monthlyIncomeToday;
+  const retirementNominal = Number(last?.nominal || monthlyIncomeToday);
   const multiplier = retirementNominal / monthlyIncomeToday;
   const lossOfPurchasingPower = ((1 - 1 / multiplier) * 100).toFixed(1);
   const millionNominal = Math.round(1_000_000 * Math.pow(1 + inflationPct / 100, years));
@@ -40,67 +41,67 @@ export function InflationChart({ currentAge, retirementAge, monthlyIncomeToday, 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="flex items-center text-xs uppercase tracking-wide text-slate-400">
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
             Сегодня
             <HelpTip text="Желаемый доход в сегодняшних деньгах — то, что ты вводил в настройках." />
           </div>
-          <div className="mt-1 text-xl font-bold text-green-400">
+          <div className="mt-1 text-xl font-semibold text-[#1d5f4a]">
             {monthlyIncomeToday.toLocaleString('ru-RU')} ₽/мес
           </div>
-          <div className="text-xs text-slate-500">в сегодняшних деньгах</div>
+          <div className="text-xs text-[#7a817b]">в сегодняшних деньгах</div>
         </div>
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-          <div className="flex items-center text-xs uppercase tracking-wide text-amber-300">
+        <div className="rounded-md border border-[#d9bf82] bg-[#fff7e6] p-4">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-[0.08em] text-[#7a5a14]">
             Через {years} лет (номинал)
             <HelpTip text="Столько нужно будет получать в номинальных рублях, чтобы покупательная способность осталась той же." />
           </div>
-          <div className="mt-1 text-xl font-bold text-amber-300">
+          <div className="mt-1 text-xl font-semibold text-[#8a5a00]">
             {retirementNominal.toLocaleString('ru-RU')} ₽/мес
           </div>
-          <div className="text-xs text-amber-400/70">×{multiplier.toFixed(2)}</div>
+          <div className="text-xs text-[#856c39]">×{multiplier.toFixed(2)}</div>
         </div>
-        <div className="rounded-xl border border-red-500/40 bg-red-500/5 p-4">
-          <div className="flex items-center text-xs uppercase tracking-wide text-red-300">
+        <div className="rounded-md border border-[#d8a39a] bg-[#fff1ed] p-4">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-[0.08em] text-[#963f32]">
             Покупательная способность
             <HelpTip text="Насколько обесценится рубль за это время. Обратная величина от роста номинала." />
           </div>
-          <div className="mt-1 text-xl font-bold text-red-300">−{lossOfPurchasingPower}%</div>
-          <div className="text-xs text-red-400/70">за {years} лет</div>
+          <div className="mt-1 text-xl font-semibold text-[#963f32]">−{lossOfPurchasingPower}%</div>
+          <div className="text-xs text-[#9a625b]">за {years} лет</div>
         </div>
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="flex items-center text-xs uppercase tracking-wide text-slate-400">
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
             1 млн ₽ сегодня =
             <HelpTip text="Сколько номинальных рублей понадобится, чтобы купить то же, что сегодня на миллион." />
           </div>
-          <div className="mt-1 text-xl font-bold">{millionNominal.toLocaleString('ru-RU')} ₽</div>
-          <div className="text-xs text-slate-500">в номинале через {years} лет</div>
+          <div className="mt-1 text-xl font-semibold">{millionNominal.toLocaleString('ru-RU')} ₽</div>
+          <div className="text-xs text-[#7a817b]">в номинале через {years} лет</div>
         </div>
       </div>
 
-      <div className="h-[360px] w-full rounded-xl border border-slate-700 bg-slate-800 p-4">
+      <div className="chart-surface h-[360px] w-full rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-2 sm:p-4">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data}>
-            <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
-            <XAxis dataKey="age" stroke="#94a3b8" tickFormatter={(v) => `${v} лет`} />
-            <YAxis stroke="#94a3b8" tickFormatter={fmt} />
+            <CartesianGrid stroke="#e5dac9" strokeDasharray="3 3" />
+            <XAxis dataKey="age" stroke="#7a817b" tickFormatter={(v) => `${v} лет`} />
+            <YAxis stroke="#7a817b" tickFormatter={fmt} width={56} />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
+                backgroundColor: '#fffaf1',
+                border: '1px solid #cbbda7',
                 borderRadius: 8,
               }}
-              labelStyle={{ color: '#e2e8f0', fontWeight: 600 }}
-              itemStyle={{ color: '#e2e8f0' }}
-              formatter={(v: any) => v.toLocaleString('ru-RU') + ' ₽/мес'}
+              labelStyle={{ color: '#1d2521', fontWeight: 600 }}
+              itemStyle={{ color: '#25302a' }}
+              formatter={(v: unknown) => Number(v).toLocaleString('ru-RU') + ' ₽/мес'}
               labelFormatter={(v) => `Возраст: ${v}`}
             />
-            <Legend wrapperStyle={{ color: '#e2e8f0' }} />
+            <Legend wrapperStyle={{ color: '#25302a' }} />
             <Area
               type="monotone"
               dataKey="nominal"
-              stroke="#f59e0b"
-              fill="#f59e0b"
+              stroke="#b98116"
+              fill="#b98116"
               fillOpacity={0.2}
               name="Нужно в номинале"
               strokeWidth={2}
@@ -108,7 +109,7 @@ export function InflationChart({ currentAge, retirementAge, monthlyIncomeToday, 
             <Line
               type="monotone"
               dataKey="today"
-              stroke="#22c55e"
+              stroke="#1d5f4a"
               strokeWidth={2}
               strokeDasharray="6 6"
               dot={false}
@@ -116,23 +117,23 @@ export function InflationChart({ currentAge, retirementAge, monthlyIncomeToday, 
             />
             <ReferenceLine
               x={retirementAge}
-              stroke="#38bdf8"
+              stroke="#3f7f92"
               strokeDasharray="4 4"
-              label={{ value: 'Пенсия', fill: '#38bdf8', fontSize: 12, position: 'top' }}
+              label={{ value: 'Пенсия', fill: '#3f7f92', fontSize: 12, position: 'top' }}
             />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-sm text-slate-400 leading-relaxed">
-        💡 Если сегодня тебе хватает{' '}
-        <b className="text-slate-200">{monthlyIncomeToday.toLocaleString('ru-RU')} ₽/мес</b>, то через{' '}
-        <b className="text-slate-200">{years} лет</b> при инфляции{' '}
-        <b className="text-slate-200">{inflationPct}%</b> для той же покупательной способности
-        понадобится <b className="text-amber-300">{retirementNominal.toLocaleString('ru-RU')} ₽/мес</b>.
+      <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1]/70 p-4 text-sm leading-relaxed text-[#5f675f]">
+        Если сегодня тебе хватает{' '}
+        <b className="text-[#1d2521]">{monthlyIncomeToday.toLocaleString('ru-RU')} ₽/мес</b>, то через{' '}
+        <b className="text-[#1d2521]">{years} лет</b> при инфляции{' '}
+        <b className="text-[#1d2521]">{inflationPct}%</b> для той же покупательной способности
+        понадобится <b className="text-[#8a5a00]">{retirementNominal.toLocaleString('ru-RU')} ₽/мес</b>.
         <br />
         Другими словами, <b>1 000 000 ₽ сегодня</b> по покупательной способности будет как{' '}
-        <b className="text-amber-300">{millionReal.toLocaleString('ru-RU')} ₽</b> через {years} лет.
+        <b className="text-[#8a5a00]">{millionReal.toLocaleString('ru-RU')} ₽</b> через {years} лет.
       </div>
     </div>
   );

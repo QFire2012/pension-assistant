@@ -9,27 +9,29 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const supabase = createClient();
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) setError(error.message);
     else router.push('/dashboard');
   };
 
   return (
-    <div className="mx-auto mt-20 max-w-sm p-6">
-      <h1 className="mb-6 text-2xl font-bold">Регистрация</h1>
-      <form onSubmit={handleSignUp} className="space-y-4">
+    <main className="grid min-h-screen place-items-center bg-[#f6f2ea] px-5 py-10">
+      <div className="w-full max-w-sm rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-5 shadow-[0_18px_60px_rgba(65,52,36,0.12)] sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756b5b]">новый план</p>
+        <h1 className="mb-6 mt-2 text-2xl font-semibold text-[#1d2521]">Регистрация</h1>
+      <form onSubmit={handleSignUp} className="space-y-3">
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2"
+          className="min-h-12 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
         />
         <input
           type="password"
@@ -38,22 +40,23 @@ export default function SignUpPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2"
+          className="min-h-12 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
         />
-        {error && <div className="text-sm text-red-400">{error}</div>}
+        {error && <div className="rounded-md border border-[#d8a39a] bg-[#fff1ed] p-3 text-sm text-[#963f32]">{error}</div>}
         <button
           type="submit"
-          className="w-full rounded-lg bg-green-500 py-2 font-semibold text-slate-900"
+          className="min-h-12 w-full rounded-md bg-[#1d5f4a] font-semibold text-white transition hover:bg-[#174d3d]"
         >
           Создать аккаунт
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-slate-400">
+      <p className="mt-4 text-center text-sm text-[#5f675f]">
         Уже есть аккаунт?{' '}
-        <Link href="/auth/login" className="text-green-400">
+        <Link href="/auth/login" className="font-semibold text-[#1d5f4a]">
           Войти
         </Link>
       </p>
-    </div>
+      </div>
+    </main>
   );
 }

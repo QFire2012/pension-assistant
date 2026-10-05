@@ -39,7 +39,7 @@ export function ContributionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`flex gap-3 ${vertical ? 'flex-col' : 'flex-wrap items-center'}`}
+      className={`grid gap-3 ${vertical ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto]'}`}
     >
       <input
         type="number"
@@ -47,25 +47,25 @@ export function ContributionForm({
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
-        className="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm"
+        className="min-h-12 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
       />
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm"
+        className="min-h-12 rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
       />
       <input
         type="text"
         placeholder="Заметка"
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        className="flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm"
+        className="min-h-12 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15"
       />
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50"
+        className="min-h-12 rounded-md bg-[#1d5f4a] px-4 text-sm font-semibold text-white transition hover:bg-[#174d3d] disabled:opacity-50"
       >
         {loading ? '...' : 'Добавить'}
       </button>

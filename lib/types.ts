@@ -1,0 +1,55 @@
+export type ChartDatum = Record<string, number | string>;
+
+export type ContributionRecord = {
+  id: string;
+  amount_cents: number;
+  contributed_at: string;
+  note: string | null;
+};
+
+export type Forecast = {
+  initialCapital: number;
+  totalContributed: number;
+  startCapital: number;
+  avgMonthlyContribution: number;
+  projectedCapital: number;
+  currentProjectedCapital: number;
+  targetCapital: number;
+  deficit: number;
+  currentDeficit: number;
+  requiredMonthly: number;
+  yearsToRetirement: number;
+  stocksPct: number;
+  bondsPct: number;
+  currentAge: number;
+  retirementAge: number;
+  desiredMonthlyIncome: number;
+  inflationPct: number;
+  realAnnualReturnPct: number;
+  projectionChart: ChartDatum[];
+  projectionChartMonthly: ChartDatum[];
+  requiredMonthlyThisYear: number;
+  requiredMonthlyAtRetirement: number;
+  totalPersonalNominal: number;
+  totalGrowthNominal: number;
+  totalInflationErosion: number;
+  targetNominalAtRetirement: number;
+  capitalNominalAtRetirement: number;
+  chartData: ChartDatum[];
+  chartDataMonthly: ChartDatum[];
+  postRetirement: ChartDatum[];
+  capitalRunOutAge: number | null;
+  safeMonthlyWithdrawal: number;
+  withdrawalRatePct: number;
+  swrPct: number;
+  isWithdrawalSafe: boolean;
+  monthlyGap: number;
+  neededCapitalForDesired: number;
+  currentPostRetirement: ChartDatum[];
+  currentCapitalRunOutAge: number | null;
+  currentSafeMonthlyWithdrawal: number;
+  currentWithdrawalRatePct: number;
+  currentIsWithdrawalSafe: boolean;
+  currentMonthlyGap: number;
+  error?: string;
+};

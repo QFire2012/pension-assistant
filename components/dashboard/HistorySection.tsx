@@ -15,9 +15,9 @@ const LABELS: Record<Metric, string> = {
 };
 
 const COLORS: Record<Metric, string> = {
-  stocks: '#22c55e',
-  bonds: '#a855f7',
-  inflation: '#f59e0b',
+  stocks: '#1d5f4a',
+  bonds: '#796246',
+  inflation: '#b98116',
 };
 
 export function HistorySection() {
@@ -26,39 +26,39 @@ export function HistorySection() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Средняя инфляция</div>
-          <div className="mt-1 text-2xl font-bold text-amber-400">{AVG.inflation}%</div>
-          <div className="text-xs text-slate-500">медиана {MEDIAN.inflation}%</div>
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">Средняя инфляция</div>
+          <div className="mt-1 text-2xl font-semibold text-[#8a5a00]">{AVG.inflation}%</div>
+          <div className="text-xs text-[#7a817b]">медиана {MEDIAN.inflation}%</div>
         </div>
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Средняя доходность акций</div>
-          <div className="mt-1 text-2xl font-bold text-green-400">{AVG.stocks}%</div>
-          <div className="text-xs text-slate-500">медиана {MEDIAN.stocks}%</div>
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">Средняя доходность акций</div>
+          <div className="mt-1 text-2xl font-semibold text-[#1d5f4a]">{AVG.stocks}%</div>
+          <div className="text-xs text-[#7a817b]">медиана {MEDIAN.stocks}%</div>
         </div>
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Средняя доходность облигаций</div>
-          <div className="mt-1 text-2xl font-bold text-purple-400">{AVG.bonds}%</div>
-          <div className="text-xs text-slate-500">медиана {MEDIAN.bonds}%</div>
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">Средняя доходность облигаций</div>
+          <div className="mt-1 text-2xl font-semibold text-[#796246]">{AVG.bonds}%</div>
+          <div className="text-xs text-[#7a817b]">медиана {MEDIAN.bonds}%</div>
         </div>
-        <div className="rounded-xl border border-slate-700 bg-slate-800 p-4">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Реальная доходность портфеля 60/40</div>
-          <div className="mt-1 text-2xl font-bold text-blue-400">
+        <div className="rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-4">
+          <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">Реальная доходность портфеля 60/40</div>
+          <div className="mt-1 text-2xl font-semibold text-[#3f7f92]">
             {(AVG.stocks * 0.6 + AVG.bonds * 0.4 - AVG.inflation).toFixed(1)}%
           </div>
-          <div className="text-xs text-slate-500">60% акций / 40% облигаций</div>
+          <div className="text-xs text-[#7a817b]">60% акций / 40% облигаций</div>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(Object.keys(LABELS) as Metric[]).map((m) => (
           <button
             key={m}
             onClick={() => setMetric(m)}
-            className={`rounded-lg border px-4 py-2 text-sm transition-colors ${
+            className={`min-h-11 rounded-md border px-4 text-sm font-medium transition-colors ${
               metric === m
-                ? 'border-slate-500 bg-slate-700 text-white'
-                : 'border-slate-700 text-slate-400 hover:bg-slate-800'
+                ? 'border-[#1d5f4a] bg-[#1d5f4a] text-white'
+                : 'border-[#cbbda7] bg-[#fffaf1] text-[#5f675f] hover:bg-[#efe6d8]'
             }`}
           >
             {LABELS[m]}
@@ -66,14 +66,19 @@ export function HistorySection() {
         ))}
       </div>
 
-      <div className="h-[380px] w-full rounded-xl border border-slate-700 bg-slate-800 p-4">
+      <div className="chart-surface h-[380px] w-full rounded-md border border-[#ddd2bf] bg-[#fffaf1] p-2 sm:p-4">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={HISTORICAL_DATA}>
-            <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
-            <XAxis dataKey="year" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" tickFormatter={(v) => `${v}%`} />
+            <CartesianGrid stroke="#e5dac9" strokeDasharray="3 3" />
+            <XAxis dataKey="year" stroke="#7a817b" />
+            <YAxis stroke="#7a817b" tickFormatter={(v) => `${v}%`} width={48} />
             <Tooltip
-              formatter={(v: any) => `${v}%`}
+              contentStyle={{
+                backgroundColor: '#fffaf1',
+                border: '1px solid #cbbda7',
+                borderRadius: 8,
+              }}
+              formatter={(v: unknown) => `${Number(v)}%`}
               labelFormatter={(v) => `Год: ${v}`}
             />
             <Legend />
@@ -90,9 +95,9 @@ export function HistorySection() {
         </ResponsiveContainer>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-900 text-xs uppercase text-slate-400">
+      <div className="overflow-x-auto rounded-md border border-[#ddd2bf] bg-[#fffaf1]">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="bg-[#f3eadc] text-xs uppercase text-[#6f766f]">
             <tr>
               <th className="p-3 text-left">Год</th>
               <th className="p-3 text-right">Инфляция</th>
@@ -103,16 +108,16 @@ export function HistorySection() {
           </thead>
           <tbody>
             {HISTORICAL_DATA.map((d) => (
-              <tr key={d.year} className="border-t border-slate-700/50">
+              <tr key={d.year} className="border-t border-[#eadfce]">
                 <td className="p-3 font-semibold">{d.year}</td>
-                <td className="p-3 text-right text-amber-400">{d.inflation.toFixed(1)}%</td>
-                <td className={`p-3 text-right ${d.stocks >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <td className="p-3 text-right text-[#8a5a00]">{d.inflation.toFixed(1)}%</td>
+                <td className={`p-3 text-right ${d.stocks >= 0 ? 'text-[#1d5f4a]' : 'text-[#963f32]'}`}>
                   {d.stocks >= 0 ? '+' : ''}{d.stocks.toFixed(1)}%
                 </td>
-                <td className={`p-3 text-right ${d.bonds >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <td className={`p-3 text-right ${d.bonds >= 0 ? 'text-[#1d5f4a]' : 'text-[#963f32]'}`}>
                   {d.bonds >= 0 ? '+' : ''}{d.bonds.toFixed(1)}%
                 </td>
-                <td className={`p-3 text-right ${(d.stocks * 0.6 + d.bonds * 0.4) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <td className={`p-3 text-right ${(d.stocks * 0.6 + d.bonds * 0.4) >= 0 ? 'text-[#1d5f4a]' : 'text-[#963f32]'}`}>
                   {(d.stocks * 0.6 + d.bonds * 0.4 >= 0 ? '+' : '')}
                   {(d.stocks * 0.6 + d.bonds * 0.4).toFixed(1)}%
                 </td>
@@ -122,8 +127,8 @@ export function HistorySection() {
         </table>
       </div>
 
-      <p className="text-xs text-slate-500">
-        ⚠️ Данные приблизительные, по открытым источникам (MOEX, Росстат). Не являются инвестиционной рекомендацией.
+      <p className="text-xs text-[#6f766f]">
+        Данные приблизительные, по открытым источникам (MOEX, Росстат). Не являются инвестиционной рекомендацией.
       </p>
     </div>
   );
