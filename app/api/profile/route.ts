@@ -25,8 +25,12 @@ export async function PATCH(request: Request) {
   const retirementAge = finiteNumber(body.retirement_age);
   const initialCapital = finiteNumber(body.initial_capital);
   const desiredMonthlyIncome = finiteNumber(body.desired_monthly_income);
-  const realReturnRate = finiteNumber(body.real_return_rate);
+  const returnRate = finiteNumber(body.real_return_rate);
   const inflationRate = finiteNumber(body.inflation_rate);
+  const swrRate = body.swr_rate === null || body.swr_rate === undefined
+    ? null
+    : finiteNumber(body.swr_rate);
+  const swrIsManual = Boolean(body.swr_is_manual);
   const portfolioStructure =
     typeof body.portfolio_structure === 'string' ? body.portfolio_structure : '';
   const [stocksPct, bondsPct] = portfolioStructure.split('_').map(Number);
@@ -36,8 +40,9 @@ export async function PATCH(request: Request) {
     retirementAge === null ||
     initialCapital === null ||
     desiredMonthlyIncome === null ||
-    realReturnRate === null ||
-    inflationRate === null
+    returnRate === null ||
+    inflationRate === null ||
+    (swrIsManual && swrRate === null)
   ) {
     return NextResponse.json({ error: 'Invalid profile values' }, { status: 400 });
   }
@@ -49,10 +54,11 @@ export async function PATCH(request: Request) {
     retirementAge > 120 ||
     initialCapital < 0 ||
     desiredMonthlyIncome < 0 ||
-    realReturnRate <= -0.99 ||
-    realReturnRate > 1 ||
+    returnRate <= -0.99 ||
+    returnRate > 1 ||
     inflationRate < 0 ||
     inflationRate > 1 ||
+    (swrIsManual && (swrRate === null || swrRate < 0.02 || swrRate > 0.08)) ||
     !/^\d{1,3}_\d{1,3}$/.test(portfolioStructure) ||
     !Number.isFinite(stocksPct) ||
     !Number.isFinite(bondsPct) ||
@@ -70,8 +76,10 @@ export async function PATCH(request: Request) {
       retirement_age: retirementAge,
       initial_capital: initialCapital,
       desired_monthly_income: desiredMonthlyIncome,
-      real_return_rate: realReturnRate,
+      real_return_rate: returnRate,
       inflation_rate: inflationRate,
+      swr_rate: swrIsManual ? swrRate : null,
+      swr_is_manual: swrIsManual,
       portfolio_structure: portfolioStructure,
       updated_at: new Date().toISOString(),
     })

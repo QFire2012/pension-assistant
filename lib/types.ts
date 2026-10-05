@@ -25,7 +25,10 @@ export type Forecast = {
   retirementAge: number;
   desiredMonthlyIncome: number;
   inflationPct: number;
+  annualReturnPct: number;
   realAnnualReturnPct: number;
+  autoSWRPct: number;
+  swrIsManual: boolean;
   projectionChart: ChartDatum[];
   projectionChartMonthly: ChartDatum[];
   requiredMonthlyThisYear: number;

@@ -1,18 +1,21 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { PORTFOLIO_OPTIONS } from '@/lib/portfolio-data';
+import { automaticSWR, PORTFOLIO_OPTIONS } from '@/lib/portfolio-data';
 
 const DEFAULT_FORM = {
   current_age: 30,
   retirement_age: 60,
   initial_capital: 0,
   desired_monthly_income: 100000,
-  real_return_rate: '5.00',
+  real_return_rate: '10.90',
   inflation_rate: '5.00',
+  swr_rate: '',
+  swr_is_manual: false,
   portfolio_structure: '60_40',
 };
 
 type ProfileForm = typeof DEFAULT_FORM;
+type NumericProfileField = Exclude<keyof ProfileForm, 'swr_is_manual' | 'portfolio_structure'>;
 
 export function ProfileDrawer({
   open,
@@ -46,8 +49,10 @@ export function ProfileDrawer({
           retirement_age: data?.retirement_age ?? 60,
           initial_capital: data?.initial_capital ?? 0,
           desired_monthly_income: data?.desired_monthly_income ?? 100000,
-          real_return_rate: (Number(data?.real_return_rate ?? 0.05) * 100).toFixed(2),
+          real_return_rate: (Number(data?.real_return_rate ?? 0.10) * 100).toFixed(2),
           inflation_rate: (Number(data?.inflation_rate ?? 0.05) * 100).toFixed(2),
+          swr_rate: data?.swr_rate ? (Number(data.swr_rate) * 100).toFixed(2) : '',
+          swr_is_manual: Boolean(data?.swr_is_manual),
           portfolio_structure: data?.portfolio_structure || '60_40',
         });
       } catch (e) {
@@ -76,6 +81,15 @@ export function ProfileDrawer({
     });
   };
 
+  const selectedPortfolio =
+    PORTFOLIO_OPTIONS.find((o) => o.id === form.portfolio_structure) || PORTFOLIO_OPTIONS[2];
+  const autoSWR = automaticSWR(selectedPortfolio.stocks, 30).toFixed(2);
+  const shownSWR = form.swr_is_manual && form.swr_rate ? form.swr_rate : autoSWR;
+  const realReturn = Math.max(
+    -99,
+    Number(form.real_return_rate || 0) - Number(form.inflation_rate || 0)
+  ).toFixed(2);
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -91,6 +105,8 @@ export function ProfileDrawer({
           desired_monthly_income: +form.desired_monthly_income,
           real_return_rate: +form.real_return_rate / 100,
           inflation_rate: +form.inflation_rate / 100,
+          swr_rate: form.swr_is_manual ? +shownSWR / 100 : null,
+          swr_is_manual: form.swr_is_manual,
           portfolio_structure: form.portfolio_structure,
         }),
       });
@@ -111,7 +127,7 @@ export function ProfileDrawer({
     }
   };
 
-  const field = (label: string, key: keyof ProfileForm, step = 1, hint?: string) => (
+  const field = (label: string, key: NumericProfileField, step = 1, hint?: string) => (
     <div>
       <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
         {label}
@@ -170,7 +186,7 @@ export function ProfileDrawer({
         ) : (
           <form onSubmit={save} className="space-y-4">
             <div className="rounded-md border border-[#d7cbb8] bg-[#f3eadc] p-3 text-xs leading-relaxed text-[#5f675f]">
-              Все расчеты в <b className="text-[#1d2521]">сегодняшних деньгах</b>. Доходность — <b className="text-[#1d2521]">реальная</b>.
+              Все расчеты в <b className="text-[#1d2521]">сегодняшних деньгах</b>. Реальная доходность считается автоматически: доходность минус инфляция.
             </div>
 
             {error && (
@@ -195,19 +211,58 @@ export function ProfileDrawer({
               >
                 {PORTFOLIO_OPTIONS.map((o) => (
                   <option key={o.id} value={o.id}>
-                    {o.label} — {o.return20y}% годовых
+                    {o.label} — {o.return20y}%, {o.risk.split(':')[0].toLowerCase()}
                   </option>
                 ))}
               </select>
+              <div className="mt-2 rounded-md border border-[#e1d5c2] bg-white/60 p-3 text-xs leading-relaxed text-[#5f675f]">
+                <b className="text-[#1d2521]">{selectedPortfolio.label}.</b>{' '}
+                {selectedPortfolio.risk}
+              </div>
             </div>
 
-            {field('Реальная доходность, %', 'real_return_rate', 0.5, 'Обычно 5–11% для России')}
+            {field('Доходность, %', 'real_return_rate', 0.5, 'Номинальная ожидаемая доходность портфеля до вычета инфляции')}
             {field(
               'Инфляция, %',
               'inflation_rate',
               0.5,
               'Средняя за 20 лет — 7,8%. Для расчётов часто берут 4–7%.'
             )}
+
+            <div className="rounded-md border border-[#d7cbb8] bg-[#f3eadc] p-3 text-xs leading-relaxed text-[#5f675f]">
+              Реальная доходность для расчета:{' '}
+              <b className="text-[#1d2521]">{realReturn}% годовых</b>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-[#6f766f]">
+                  SWR, %
+                </label>
+                <label className="flex items-center gap-2 text-xs font-medium text-[#5f675f]">
+                  <input
+                    type="checkbox"
+                    checked={form.swr_is_manual}
+                    onChange={(e) => setForm({ ...form, swr_is_manual: e.target.checked })}
+                    className="h-4 w-4 accent-[#1d5f4a]"
+                  />
+                  настроить вручную
+                </label>
+              </div>
+              <input
+                type="number"
+                step={0.1}
+                min={2}
+                max={8}
+                value={shownSWR}
+                disabled={!form.swr_is_manual}
+                onChange={(e) => update('swr_rate', e.target.value)}
+                className="min-h-11 w-full rounded-md border border-[#cbbda7] bg-white px-3 text-sm text-[#1d2521] outline-none transition focus:border-[#1d5f4a] focus:ring-2 focus:ring-[#1d5f4a]/15 disabled:bg-[#f3eadc] disabled:text-[#7a817b]"
+              />
+              <p className="mt-1 text-xs leading-relaxed text-[#7a817b]">
+                Авто: {autoSWR}% для 30 лет пенсии и структуры {selectedPortfolio.label}. Чем длиннее период снятия и выше риск плохой последовательности доходностей, тем осторожнее SWR.
+              </p>
+            </div>
 
             <button
               type="submit"
