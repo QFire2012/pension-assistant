@@ -4,9 +4,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 const links = [
-  { href: '/dashboard', label: 'План', short: 'План', icon: 'П' },
-  { href: '/dashboard/contributions', label: 'Взносы', short: 'Взносы', icon: 'В' },
-  { href: '/dashboard/data', label: 'Рынок', short: 'Рынок', icon: 'Р' },
+  { href: '/dashboard', label: 'План', short: 'План' },
+  { href: '/dashboard/contributions', label: 'Взносы', short: 'Взносы' },
+  { href: '/dashboard/data', label: 'Рынок', short: 'Рынок' },
 ];
 
 export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
@@ -43,17 +43,12 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
             <Link
               key={l.href}
               href={l.href}
-              className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${
+              className={`flex min-h-11 items-center rounded-md border-l-4 px-3 text-sm font-medium transition-colors ${
                 l.active
-                  ? 'bg-[#1d5f4a] text-white'
-                  : 'text-[#5f675f] hover:bg-[#efe6d8] hover:text-[#1d2521]'
+                  ? 'border-[#1d5f4a] bg-[#edf3e8] text-[#1d2521]'
+                  : 'border-transparent text-[#5f675f] hover:bg-[#efe6d8] hover:text-[#1d2521]'
               }`}
             >
-              <span className={`grid h-7 w-7 place-items-center rounded text-xs font-semibold ${
-                l.active ? 'bg-white/15' : 'bg-[#eadfce] text-[#655b4e]'
-              }`}>
-                {l.icon}
-              </span>
               <span>{l.label}</span>
             </Link>
           ))}
@@ -62,45 +57,37 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
         <div className="border-t border-[#e5dac9] p-3">
           <button
             onClick={onOpenSettings}
-            className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-[#5f675f] hover:bg-[#efe6d8] hover:text-[#1d2521]"
+            className="flex min-h-11 w-full items-center rounded-md border-l-4 border-transparent px-3 text-sm font-medium text-[#5f675f] hover:bg-[#efe6d8] hover:text-[#1d2521]"
           >
-            <span className="grid h-7 w-7 place-items-center rounded bg-[#eadfce] text-xs font-semibold text-[#655b4e]">
-              Н
-            </span>
             <span>Настройки</span>
           </button>
           <button
             onClick={logout}
-            className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-[#7a4f47] hover:bg-[#f1dfd7]"
+            className="mt-1 flex min-h-11 w-full items-center rounded-md border-l-4 border-transparent px-3 text-sm font-medium text-[#7a4f47] hover:bg-[#f1dfd7]"
           >
-            <span className="grid h-7 w-7 place-items-center rounded bg-[#f0ded6] text-xs font-semibold">
-              В
-            </span>
             <span>Выйти</span>
           </button>
         </div>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[#ddd2bf] bg-[#fffaf1]/95 px-3 py-2 shadow-[0_-10px_30px_rgba(65,52,36,0.12)] backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 lg:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full border border-[#d8cbb7] bg-[#fffaf1]/95 p-1 shadow-[0_-12px_34px_rgba(65,52,36,0.14)] backdrop-blur">
           {navItems.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className={`flex min-h-14 flex-col items-center justify-center rounded-md text-xs font-medium ${
-                l.active ? 'bg-[#1d5f4a] text-white' : 'text-[#5f675f]'
+              className={`flex min-h-11 items-center justify-center rounded-full px-2 text-[13px] font-semibold transition-colors ${
+                l.active ? 'bg-[#1d5f4a] text-white shadow-sm' : 'text-[#5f675f] hover:bg-[#efe6d8]'
               }`}
             >
-              <span className="text-sm font-semibold">{l.icon}</span>
               <span>{l.short}</span>
             </Link>
           ))}
           <button
             onClick={onOpenSettings}
-            className="flex min-h-14 flex-col items-center justify-center rounded-md text-xs font-medium text-[#5f675f]"
+            className="flex min-h-11 items-center justify-center rounded-full px-2 text-[13px] font-semibold text-[#5f675f] transition-colors hover:bg-[#efe6d8]"
           >
-            <span className="text-sm font-semibold">Н</span>
-            <span>Настр.</span>
+            <span>Профиль</span>
           </button>
         </div>
       </nav>

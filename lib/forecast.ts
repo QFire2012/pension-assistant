@@ -22,6 +22,38 @@ type Contribution = {
   contributed_at: string;
 };
 
+function monthKey(value: string | Date) {
+  if (typeof value === 'string') {
+    const match = /^(\d{4})-(\d{2})/.exec(value);
+    if (match) return `${match[1]}-${match[2]}`;
+  }
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function averageMonthlyContribution(contributions: Contribution[], startDate: Date) {
+  const windowStart = new Date(startDate);
+  windowStart.setMonth(windowStart.getMonth() - 5);
+  const minKey = monthKey(windowStart);
+  const maxKey = monthKey(startDate);
+  if (!minKey || !maxKey) return 0;
+
+  const totalsByMonth = new Map<string, number>();
+  for (const contribution of contributions) {
+    const key = monthKey(contribution.contributed_at);
+    if (!key || key < minKey || key > maxKey) continue;
+    totalsByMonth.set(
+      key,
+      (totalsByMonth.get(key) || 0) + Number(contribution.amount_cents) / 100
+    );
+  }
+
+  if (totalsByMonth.size === 0) return 0;
+  const total = Array.from(totalsByMonth.values()).reduce((sum, amount) => sum + amount, 0);
+  return total / totalsByMonth.size;
+}
+
 function makeMonthLabels(startDate: Date, monthOffset: number) {
   const d = new Date(startDate.getFullYear(), startDate.getMonth() + monthOffset, 1);
   const short = `${SHORT_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
@@ -50,17 +82,7 @@ export async function generateForecast(userId: string) {
 
   const today = new Date();
   const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-  const sixMonthsAgo = new Date(startDate);
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-  const recent = (contributions || []).filter(
-    (c) => new Date(c.contributed_at) >= sixMonthsAgo
-  );
-  const recentTotal =
-    recent.reduce((s, c) => s + Number(c.amount_cents), 0) / 100;
-  const avgMonthly =
-    recent.length > 0
-      ? recentTotal / 6
-      : 0;
+  const avgMonthly = averageMonthlyContribution(contributions, startDate);
 
   const yearsToRetirement = Math.max(0, profile.retirement_age - profile.current_age);
   const monthsToRetirement = yearsToRetirement * 12;
@@ -69,8 +91,10 @@ export async function generateForecast(userId: string) {
   const inflationRate = Number(profile.inflation_rate || 0.05);
 
   const { stocksPct, bondsPct } = splitOf(profile.portfolio_structure || '60_40');
-  const monthlyStocksReturn = Math.pow(1 + STOCKS_RETURN_20Y / 100, 1 / 12) - 1;
-  const monthlyBondsReturn = Math.pow(1 + BONDS_RETURN_20Y / 100, 1 / 12) - 1;
+  const realStocksAnnual = (1 + STOCKS_RETURN_20Y / 100) / (1 + inflationRate) - 1;
+  const realBondsAnnual = (1 + BONDS_RETURN_20Y / 100) / (1 + inflationRate) - 1;
+  const monthlyStocksReturn = Math.pow(1 + realStocksAnnual, 1 / 12) - 1;
+  const monthlyBondsReturn = Math.pow(1 + realBondsAnnual, 1 / 12) - 1;
 
   const gap = Number(profile.desired_monthly_income);
   const targetCapitalToday = gap > 0 ? (gap * 12) / SWR : 0;

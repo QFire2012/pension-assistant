@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function finiteNumber(value: unknown) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -16,9 +21,60 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
+  const currentAge = finiteNumber(body.current_age);
+  const retirementAge = finiteNumber(body.retirement_age);
+  const initialCapital = finiteNumber(body.initial_capital);
+  const desiredMonthlyIncome = finiteNumber(body.desired_monthly_income);
+  const realReturnRate = finiteNumber(body.real_return_rate);
+  const inflationRate = finiteNumber(body.inflation_rate);
+  const portfolioStructure =
+    typeof body.portfolio_structure === 'string' ? body.portfolio_structure : '';
+  const [stocksPct, bondsPct] = portfolioStructure.split('_').map(Number);
+
+  if (
+    currentAge === null ||
+    retirementAge === null ||
+    initialCapital === null ||
+    desiredMonthlyIncome === null ||
+    realReturnRate === null ||
+    inflationRate === null
+  ) {
+    return NextResponse.json({ error: 'Invalid profile values' }, { status: 400 });
+  }
+
+  if (
+    currentAge < 0 ||
+    currentAge > 100 ||
+    retirementAge <= currentAge ||
+    retirementAge > 120 ||
+    initialCapital < 0 ||
+    desiredMonthlyIncome < 0 ||
+    realReturnRate <= -0.99 ||
+    realReturnRate > 1 ||
+    inflationRate < 0 ||
+    inflationRate > 1 ||
+    !/^\d{1,3}_\d{1,3}$/.test(portfolioStructure) ||
+    !Number.isFinite(stocksPct) ||
+    !Number.isFinite(bondsPct) ||
+    stocksPct < 0 ||
+    bondsPct < 0 ||
+    stocksPct + bondsPct !== 100
+  ) {
+    return NextResponse.json({ error: 'Profile values out of range' }, { status: 400 });
+  }
+
   const { error } = await supabase
     .from('profiles')
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update({
+      current_age: currentAge,
+      retirement_age: retirementAge,
+      initial_capital: initialCapital,
+      desired_monthly_income: desiredMonthlyIncome,
+      real_return_rate: realReturnRate,
+      inflation_rate: inflationRate,
+      portfolio_structure: portfolioStructure,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
