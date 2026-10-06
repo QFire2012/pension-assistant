@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { syncGuestPlanToProfile } from '@/lib/guest-plan-sync';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
@@ -14,9 +15,14 @@ export default function SignUpPage() {
     e.preventDefault();
     setError('');
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) setError(error.message);
-    else router.push('/dashboard');
+    else if (data.session) {
+      await syncGuestPlanToProfile(window.localStorage).catch(() => false);
+      router.push('/dashboard');
+    } else {
+      router.push('/auth/login');
+    }
   };
 
   return (
