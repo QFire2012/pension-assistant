@@ -84,7 +84,7 @@ export default function ContributionsPage() {
         <MetricCard
           label="Средний взнос/мес"
           value={formatMoney(forecast.avgMonthlyContribution)}
-          hint="Среднее по месяцам, где были взносы, за последние 6 месяцев"
+          hint="Среднее по всем 6 календарным месяцам, включая месяцы без взносов"
         />
         <MetricCard label="Прогноз к пенсии" value={formatMoney(forecast.currentProjectedCapital)} />
         <MetricCard

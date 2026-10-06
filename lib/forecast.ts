@@ -1,5 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
-import { automaticSWR, splitOf, STOCKS_RETURN_20Y, BONDS_RETURN_20Y } from '@/lib/portfolio-data';
+import {
+  automaticSWR,
+  realReturnFromNominal,
+  splitOf,
+  STOCKS_RETURN_20Y,
+  BONDS_RETURN_20Y,
+} from '@/lib/portfolio-data';
 import type { ChartDatum } from '@/lib/types';
 
 const SHORT_MONTHS = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -49,9 +55,8 @@ function averageMonthlyContribution(contributions: Contribution[], startDate: Da
     );
   }
 
-  if (totalsByMonth.size === 0) return 0;
   const total = Array.from(totalsByMonth.values()).reduce((sum, amount) => sum + amount, 0);
-  return total / totalsByMonth.size;
+  return total / 6;
 }
 
 function makeMonthLabels(startDate: Date, monthOffset: number) {
@@ -88,7 +93,7 @@ export async function generateForecast(userId: string) {
   const monthsToRetirement = yearsToRetirement * 12;
   const annualReturn = Number(profile.real_return_rate);
   const inflationRate = Number(profile.inflation_rate || 0.05);
-  const realAnnual = annualReturn - inflationRate;
+  const realAnnual = realReturnFromNominal(annualReturn, inflationRate);
   const monthlyReturn = Math.pow(1 + realAnnual, 1 / 12) - 1;
 
   const { stocksPct, bondsPct } = splitOf(profile.portfolio_structure || '60_40');
@@ -99,8 +104,8 @@ export async function generateForecast(userId: string) {
     ? profileSWRPct
     : autoSWRPct;
   const swr = swrPct / 100;
-  const realStocksAnnual = STOCKS_RETURN_20Y / 100 - inflationRate;
-  const realBondsAnnual = BONDS_RETURN_20Y / 100 - inflationRate;
+  const realStocksAnnual = realReturnFromNominal(STOCKS_RETURN_20Y / 100, inflationRate);
+  const realBondsAnnual = realReturnFromNominal(BONDS_RETURN_20Y / 100, inflationRate);
   const monthlyStocksReturn = Math.pow(1 + realStocksAnnual, 1 / 12) - 1;
   const monthlyBondsReturn = Math.pow(1 + realBondsAnnual, 1 / 12) - 1;
 
@@ -319,7 +324,7 @@ export async function generateForecast(userId: string) {
 
     const safeMonthlyWithdrawal = (startCapitalToday * swr) / 12;
     const withdrawalRatePct = startCapitalToday > 0 ? (desiredYearly / startCapitalToday) * 100 : 0;
-    const isWithdrawalSafe = withdrawalRatePct <= swrPct;
+    const isWithdrawalSafe = gap === 0 || capitalRunOutAge === null;
     const monthlyGap = Math.max(0, gap - safeMonthlyWithdrawal);
 
     return {
@@ -334,13 +339,6 @@ export async function generateForecast(userId: string) {
 
   const recommendedRetirement = simulatePostRetirement(projectedToday);
   const currentRetirement = simulatePostRetirement(currentProjectedToday);
-
-  await supabase.from('forecast_snapshots').insert({
-    user_id: userId,
-    projected_capital_cents: Math.round(projectedToday * 100),
-    required_monthly_cents: Math.round(requiredMonthlyToday * 100),
-    deficit_cents: Math.round(deficitToday * 100),
-  });
 
   return {
     initialCapital: Math.round(initialCapital),

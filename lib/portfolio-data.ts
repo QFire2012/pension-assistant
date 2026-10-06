@@ -61,6 +61,10 @@ export const AVG_INFLATION_20Y = 7.8;   // % годовых, Россия 2006�
 export const STOCKS_RETURN_20Y = 10.4;  // MCFTR, полная доходность
 export const BONDS_RETURN_20Y  = 8.1;   // RGBITR, полная доходность
 
+export function realReturnFromNominal(nominalRate: number, inflationRate: number) {
+  return (1 + nominalRate) / (1 + inflationRate) - 1;
+}
+
 export function automaticSWR(stocksPct: number, retirementYears = 30) {
   let swr = 4;
 

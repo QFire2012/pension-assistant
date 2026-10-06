@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { automaticSWR, PORTFOLIO_OPTIONS } from '@/lib/portfolio-data';
+import { automaticSWR, PORTFOLIO_OPTIONS, realReturnFromNominal } from '@/lib/portfolio-data';
 
 const DEFAULT_FORM = {
   current_age: 30,
@@ -85,9 +85,11 @@ export function ProfileDrawer({
     PORTFOLIO_OPTIONS.find((o) => o.id === form.portfolio_structure) || PORTFOLIO_OPTIONS[2];
   const autoSWR = automaticSWR(selectedPortfolio.stocks, 30).toFixed(2);
   const shownSWR = form.swr_is_manual && form.swr_rate ? form.swr_rate : autoSWR;
-  const realReturn = Math.max(
-    -99,
-    Number(form.real_return_rate || 0) - Number(form.inflation_rate || 0)
+  const realReturn = (
+    realReturnFromNominal(
+      Number(form.real_return_rate || 0) / 100,
+      Number(form.inflation_rate || 0) / 100
+    ) * 100
   ).toFixed(2);
 
   const save = async (e: React.FormEvent) => {
@@ -186,7 +188,7 @@ export function ProfileDrawer({
         ) : (
           <form onSubmit={save} className="space-y-4">
             <div className="rounded-md border border-[#d7cbb8] bg-[#f3eadc] p-3 text-xs leading-relaxed text-[#5f675f]">
-              Все расчеты в <b className="text-[#1d2521]">сегодняшних деньгах</b>. Реальная доходность считается автоматически: доходность минус инфляция.
+              Все расчеты в <b className="text-[#1d2521]">сегодняшних деньгах</b>. Реальная доходность считается автоматически с учетом сложного процента и инфляции.
             </div>
 
             {error && (
