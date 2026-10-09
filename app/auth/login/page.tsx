@@ -19,7 +19,7 @@ export default function LoginPage() {
     if (error) setError(error.message);
     else {
       await syncGuestPlanToProfile(window.localStorage).catch(() => false);
-      router.push('/dashboard');
+      router.push('/hub');
     }
   };
 

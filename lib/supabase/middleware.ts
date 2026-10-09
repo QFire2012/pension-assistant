@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const protectedPaths = ['/dashboard', '/profile'];
+  const protectedPaths = ['/hub', '/dashboard', '/profile'];
   const isProtected = protectedPaths.some((p) =>
     request.nextUrl.pathname.startsWith(p)
   );

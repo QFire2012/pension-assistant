@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 const links = [
+  { href: '/hub', label: 'Все планы', short: 'Планы' },
   { href: '/dashboard', label: 'План', short: 'План' },
   { href: '/dashboard/contributions', label: 'Взносы', short: 'Взносы' },
   { href: '/dashboard/data', label: 'Рынок', short: 'Рынок' },
@@ -28,7 +29,7 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
     <>
       <aside className="fixed left-0 top-0 z-30 hidden h-screen w-72 flex-col border-r border-[#ddd2bf] bg-[#fffaf1] lg:flex">
         <div className="px-6 pb-5 pt-6">
-          <Link href="/dashboard" className="block">
+          <Link href="/hub" className="block">
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#756b5b]">
               пенсионный план
             </span>
@@ -71,7 +72,7 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2 lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full border border-[#d8cbb7] bg-[#fffaf1]/95 p-1 shadow-[0_-12px_34px_rgba(65,52,36,0.14)] backdrop-blur">
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-full border border-[#d8cbb7] bg-[#fffaf1]/95 p-1 shadow-[0_-12px_34px_rgba(65,52,36,0.14)] backdrop-blur">
           {navItems.map((l) => (
             <Link
               key={l.href}

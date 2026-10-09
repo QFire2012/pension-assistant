@@ -19,7 +19,7 @@ export default function SignUpPage() {
     if (error) setError(error.message);
     else if (data.session) {
       await syncGuestPlanToProfile(window.localStorage).catch(() => false);
-      router.push('/dashboard');
+      router.push('/hub');
     } else {
       router.push('/auth/login');
     }
