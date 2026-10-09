@@ -71,10 +71,14 @@ export function PensionWorkspace() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
         <header className="mb-7 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-[var(--muted)]">Пенсионный план</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Настройте свой план</h1>
+            <p className="text-sm font-medium text-[var(--muted)]">План на будущее</p>
+            <h1 className="display-title mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Настройте свой план</h1>
           </div>
-          <Link href="/auth/login" className="text-sm font-semibold text-[var(--accent)] hover:underline">Войти</Link>
+          <nav className="flex flex-wrap items-center justify-end gap-3 text-sm font-semibold" aria-label="Разделы калькулятора">
+            <Link href="/" className="text-[var(--ink)]">Пенсия</Link>
+            <Link href="/goals" className="text-[var(--muted)] hover:text-[var(--accent)]">Цели</Link>
+            <Link href="/auth/login" className="text-[var(--accent)] hover:underline">Войти</Link>
+          </nav>
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">

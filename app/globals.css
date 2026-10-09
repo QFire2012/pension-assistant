@@ -10,6 +10,7 @@
   --line: #d6e1db;
   --muted: #597066;
   --danger: #b84b4b;
+  --display-font: Georgia, 'Times New Roman', serif;
 }
 
 * {
@@ -24,6 +25,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   letter-spacing: 0;
+}
+
+.display-title {
+  font-family: var(--display-font);
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
 
 button,
