@@ -45,18 +45,6 @@ body {
   padding-bottom: 2rem;
 }
 
-.hub-mark {
-  display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
-  place-items: center;
-  border: 1px solid var(--accent);
-  color: var(--accent-strong);
-  font-family: var(--display-font);
-  font-size: 1.2rem;
-  transform: rotate(4deg);
-}
-
 .hub-card {
   display: flex;
   min-height: 18rem;
@@ -87,14 +75,6 @@ body {
   gap: .5rem;
   color: var(--accent-strong);
   font-weight: 700;
-}
-
-.hub-card-action span {
-  transition: transform .2s ease;
-}
-
-.hub-card:hover .hub-card-action span {
-  transform: translate(2px, -2px);
 }
 
 .hub-card-muted {
@@ -212,11 +192,6 @@ button {
 @media (max-width: 640px) {
   .hub-header {
     gap: 1.5rem;
-  }
-
-  .hub-mark {
-    width: 2.75rem;
-    height: 2.75rem;
   }
 
   .workspace-header {
