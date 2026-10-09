@@ -1,5 +1,5 @@
-import { PensionWorkspace } from '../components/guest/PensionWorkspace';
+import { CarGoalWorkspace } from '../components/goal/CarGoalWorkspace';
 
 export default function Home() {
-  return <PensionWorkspace />;
+  return <CarGoalWorkspace />;
 }
