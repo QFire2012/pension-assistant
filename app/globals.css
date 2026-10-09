@@ -27,6 +27,91 @@ body {
   letter-spacing: 0;
 }
 
+.workspace-page {
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.5), transparent 38%),
+    var(--app-bg);
+}
+
+.workspace-frame {
+  max-width: 1180px;
+}
+
+.workspace-header {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1.35rem;
+}
+
+.workspace-nav a {
+  padding: .35rem .2rem;
+  text-underline-offset: 4px;
+}
+
+.workspace-inputs {
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 12px 30px rgba(23,63,53,.06);
+}
+
+.workspace-control {
+  border-radius: .55rem;
+  color: var(--ink);
+}
+
+.workspace-control:focus-visible,
+.workspace-cta:focus-visible,
+.workspace-nav a:focus-visible {
+  outline: 3px solid rgba(61,139,115,.35);
+  outline-offset: 3px;
+}
+
+.workspace-result {
+  position: relative;
+  overflow: hidden;
+  background: var(--ink);
+  box-shadow: 12px 18px 0 rgba(61,139,115,.16);
+}
+
+.workspace-result::after {
+  position: absolute;
+  right: -5rem;
+  top: -5rem;
+  width: 15rem;
+  height: 15rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 50%;
+  content: '';
+}
+
+.workspace-metrics {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-metric {
+  min-height: 3.5rem;
+}
+
+.workspace-cta {
+  position: relative;
+  z-index: 1;
+  border-radius: .55rem;
+  background: var(--accent);
+  color: #fff;
+  transition: background-color .2s ease, transform .2s ease;
+}
+
+.workspace-cta:hover {
+  background: var(--accent-strong);
+  transform: translateY(-1px);
+}
+
+.scenario-item {
+  border-left: 3px solid var(--accent);
+  background: rgba(255,255,255,.07);
+}
+
 .display-title {
   font-family: var(--display-font);
   font-weight: 600;
@@ -51,6 +136,19 @@ button {
 }
 
 @media (max-width: 640px) {
+  .workspace-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workspace-nav {
+    justify-content: flex-start;
+  }
+
+  .workspace-result {
+    box-shadow: 6px 10px 0 rgba(61,139,115,.16);
+  }
+
   .chart-surface {
     min-height: 280px;
   }

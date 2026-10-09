@@ -67,14 +67,14 @@ export function PensionWorkspace() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--app-bg)] text-[var(--ink)]">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-        <header className="mb-7 flex items-center justify-between gap-4">
+    <main className="workspace-page min-h-screen text-[var(--ink)]">
+      <div className="workspace-frame mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        <header className="workspace-header mb-7 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-[var(--muted)]">План на будущее</p>
             <h1 className="display-title mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Настройте свой план</h1>
           </div>
-          <nav className="flex flex-wrap items-center justify-end gap-3 text-sm font-semibold" aria-label="Разделы калькулятора">
+          <nav className="workspace-nav flex flex-wrap items-center justify-end gap-3 text-sm font-semibold" aria-label="Разделы калькулятора">
             <Link href="/" className="text-[var(--ink)]">Пенсия</Link>
             <Link href="/goals" className="text-[var(--muted)] hover:text-[var(--accent)]">Цели</Link>
             <Link href="/auth/login" className="text-[var(--accent)] hover:underline">Войти</Link>
@@ -82,7 +82,7 @@ export function PensionWorkspace() {
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
-          <section className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-sm sm:p-6">
+          <section className="workspace-inputs p-5 sm:p-7">
             <h2 className="text-xl font-semibold">Параметры</h2>
             <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Можно изменить в любой момент. Расчёт сохранится на этом устройстве.</p>
             <div className="mt-5 grid gap-4">
@@ -99,12 +99,12 @@ export function PensionWorkspace() {
             {error && <p className="mt-4 text-sm font-medium text-[var(--danger)]">{error}</p>}
           </section>
 
-          <section className="rounded-2xl bg-[var(--ink)] p-5 text-white shadow-lg sm:p-7">
+          <section className="workspace-result p-5 text-white sm:p-8">
             <p className="text-sm text-white/70">Чтобы получать {money(lastValidPlan.desiredMonthlyIncome)} в сегодняшних деньгах</p>
             <p data-testid="required-monthly" className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{money(forecast.requiredMonthly)}<span className="text-xl font-medium text-white/70">/мес</span></p>
             <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">Регулярный взнос с учётом доходности, инфляции и срока до пенсии.</p>
 
-            <dl className="mt-7 grid gap-4 border-t border-white/15 pt-5 sm:grid-cols-3">
+            <dl className="workspace-metrics mt-7 grid gap-4 border-t border-white/15 pt-5 sm:grid-cols-3">
               <Result label="Нужно накопить" value={money(forecast.targetCapital)} />
               <Result label="Реальная доходность" value={`${forecast.realAnnualReturnPct}%`} />
               <Result label="Горизонт" value={`${lastValidPlan.retirementAge - lastValidPlan.currentAge} лет`} />
@@ -119,9 +119,9 @@ export function PensionWorkspace() {
 }
 
 function Field({ label, value, step = '1', onChange }: { label: string; value: number; step?: string; onChange: (value: string) => void }) {
-  return <label className="grid gap-1.5 text-sm font-medium"><span>{label}</span><input type="number" min="0" step={step} value={value} onChange={(event) => onChange(event.target.value)} className="min-h-12 rounded-xl border border-[var(--line)] bg-white px-3 text-base outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></label>;
+  return <label className="workspace-field grid gap-1.5 text-sm font-medium"><span>{label}</span><input type="number" min="0" step={step} value={value} onChange={(event) => onChange(event.target.value)} className="workspace-control min-h-12 border border-[var(--line)] bg-white px-3 text-base outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></label>;
 }
 
 function Result({ label, value }: { label: string; value: string }) {
-  return <div><dt className="text-xs text-white/60">{label}</dt><dd className="mt-1 text-lg font-semibold">{value}</dd></div>;
+  return <div className="workspace-metric"><dt className="text-xs text-white/60">{label}</dt><dd className="mt-1 text-lg font-semibold">{value}</dd></div>;
 }
